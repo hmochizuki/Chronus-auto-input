@@ -5,6 +5,7 @@
     "strict": true,
     "rootDir": "src",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "typeRoots": [ "node_modules/@types"]
   },
   "exclude": [

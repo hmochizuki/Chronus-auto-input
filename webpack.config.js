@@ -4,8 +4,8 @@ const CopyPlugin = require("copy-webpack-plugin");
 module.exports = {
   mode: process.env.NODE_ENV || "development",
   entry: {
-    background: path.join(__dirname, "src/background.js"),
-    popup: path.join(__dirname, "src/popup.js"),
+    background: path.join(__dirname, "src/background.ts"),
+    popup: path.join(__dirname, "src/popup.ts"),
   },
   output: {
     path: path.join(__dirname, "dist/js"),
@@ -23,7 +23,6 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".js"],
   },
-  // plugins: [new CopyPlugin([{ from: ".", to: "../" }], { context: "public" })],
   plugins: [
     new CopyPlugin({ patterns: [{ from: ".", to: "../", context: "public" }] }),
   ],
