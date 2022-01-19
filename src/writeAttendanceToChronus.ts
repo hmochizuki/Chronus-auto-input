@@ -10,20 +10,28 @@ type Data = { month: string; date: string; start: string; end: string };
 export function writeAttendanceToChronus(
   chronusWorkDivisionOptions: WorkDivisionOption[]
 ) {
+  function parseUnixFromTime(time: string) {
+    return new Date(
+      `2021-01-01 ${time.substring(0, 2)}:${parseInt(time.substring(2, 4))}`
+    ).getTime();
+  }
+
+  function parseTimeStringFromUnix(unix: number) {
+    const d = new Date(unix);
+    return (
+      String(d.getHours()).padStart(2, "0") +
+      String(d.getMinutes()).padStart(2, "0")
+    );
+  }
+
   /**
    * 時間を2つ受け取り 差分の unixtime を返却する関数
    * @param source 時間(HH:mm)
    * @param target 時間(HH:mm)
    * @returns target - source の unixtime(ms)
    */
-  function calcTimeDiffFromHour(source: string, target: string) {
-    const d1 = new Date(
-      `2021-01-01 ${source.substring(0, 2)}:${parseInt(source.substring(2, 4))}`
-    );
-    const d2 = new Date(
-      `2021-01-01 ${target.substring(0, 2)}:${parseInt(target.substring(2, 4))}`
-    );
-    return d2.getTime() - d1.getTime();
+  function calcUnixTimeDiff(source: string, target: string) {
+    return parseUnixFromTime(target) - parseUnixFromTime(source);
   }
 
   const iframe = document.getElementsByName("OPERATION")[0];
@@ -60,13 +68,13 @@ export function writeAttendanceToChronus(
     if (!workDivisionOption)
       return window.alert("正しいデータが登録されていません。");
 
-    const startTimeValue = workDivisionOption.end;
-    const endTimeValue = targetData.end;
-
     // 基本情報を入力する
-    // TODO: 実際の勤務開始データと始業開始時間の差分を終業時間に追加する
+    const startTimeValue = workDivisionOption.end;
+    const diffFromActual = calcUnixTimeDiff(targetData.start, startTimeValue);
+    const endTimeValue = parseTimeStringFromUnix(parseUnixFromTime(targetData.end) + diffFromActual);
+
     (doc.getElementsByName("StartTime")[0] as HTMLInputElement).value =
-      startTimeValue;
+      workDivisionOption.end;
     (doc.getElementsByName("EndTime")[0] as HTMLInputElement).value =
       endTimeValue;
     (doc.getElementsByName("WorkDivision")[0] as HTMLInputElement).value =
@@ -77,17 +85,17 @@ export function writeAttendanceToChronus(
       "1";
 
     // 工数の計算を行い、最初のPJコードに工数を入力する
-    const diff = calcTimeDiffFromHour(startTimeValue, endTimeValue);
+    const diff = calcUnixTimeDiff(startTimeValue, endTimeValue);
     const diffHour = diff / (60 * 60 * 1000);
     const diffMinute = (diffHour - Math.floor(diffHour)) * 60;
     const costQuantity =
       String(Math.floor(diffHour) - 1).padStart(2, "0") +
       String(Math.floor(diffMinute)).padStart(2, "0");
 
-      (doc.getElementsByName("CostQuantity")[0] as HTMLInputElement).value =
-        costQuantity;
-      (doc.getElementsByName("TotalQuantity")[0] as HTMLInputElement).value =
-        costQuantity;
+    (doc.getElementsByName("CostQuantity")[0] as HTMLInputElement).value =
+      costQuantity;
+    (doc.getElementsByName("TotalQuantity")[0] as HTMLInputElement).value =
+      costQuantity;
 
     // 打刻時間がずれている場合、備考を入力する
     const startTimeStamp = (
@@ -99,10 +107,10 @@ export function writeAttendanceToChronus(
 
     if (startTimeStamp && endTimeStamp) {
       const startDiffMinute =
-        Math.abs(calcTimeDiffFromHour(startTimeStamp, startTimeValue)) /
+        Math.abs(calcUnixTimeDiff(startTimeStamp, startTimeValue)) /
         (60 * 1000);
       const endDiffMinute =
-        Math.abs(calcTimeDiffFromHour(endTimeStamp, endTimeValue)) /
+        Math.abs(calcUnixTimeDiff(endTimeStamp, endTimeValue)) /
         (60 * 1000);
       if (startDiffMinute > 30 || endDiffMinute > 30) {
         (doc.getElementsByName("Comment")[0] as HTMLInputElement).value =
