@@ -1,11 +1,11 @@
+import chronusWorkDivisionOptions from "./options/chronusWorkDivisionOptions.json"
+
 type WorkDivisionOption = {
   label: string;
   value: string;
   start?: string;
   end?: string;
 };
-
-type Data = { month: string; date: string; start: string; end: string };
 
 export function writeAttendanceToChronus(
   chronusWorkDivisionOptions: WorkDivisionOption[]
@@ -34,19 +34,13 @@ export function writeAttendanceToChronus(
     return parseUnixFromTime(target) - parseUnixFromTime(source);
   }
 
-  const iframe = document.getElementsByName("OPERATION")[0];
-  if (!iframe) return window.alert("クロノスで実行してください。");
-
-  // @ts-expect-error
-  const doc = iframe.contentDocument as Document;
-  const pageTitle = doc.getElementsByClassName("kinoutitle")[0].textContent;
+  const doc = document;
+  const pageTitle = doc.getElementsByClassName("kinoutitle")?.[0]?.textContent;
   const displayedYmd = (
-    doc.getElementsByName("DateToday")[0] as HTMLInputElement
-  ).value;
+    doc.getElementsByName("DateToday")?.[0] as HTMLInputElement
+  )?.value;
 
-  if (pageTitle !== "勤休内容登録" || !displayedYmd) {
-    return window.alert("クロノスの勤休内容登録画面で実行してください。");
-  }
+  if (pageTitle !== "勤休内容登録" || !displayedYmd) return
 
   const [_displayedYear, displayedMonth, displayedDate] =
     displayedYmd.split("/");
@@ -58,12 +52,11 @@ export function writeAttendanceToChronus(
     const targetData = data.find(
       ({ month, date }) => month === displayedMonth && date === displayedDate
     );
-    if (!targetData)
-      return window.alert("対象日のデータが登録されていません。");
+
+    if (!targetData)return console.warn("対象日のデータが登録されていません。");
 
     const workDivisionOption = chronusWorkDivisionOptions.find(
-      ({ start, end }) =>
-        start && end && start <= targetData.start && end >= targetData.start
+      ({ start, end }) => start && end && start <= targetData.start && end >= targetData.start
     );
 
     if (!workDivisionOption || !workDivisionOption.end)
@@ -123,3 +116,5 @@ export function writeAttendanceToChronus(
     return window.confirm("OK");
   });
 }
+
+writeAttendanceToChronus(chronusWorkDivisionOptions);
