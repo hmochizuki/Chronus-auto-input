@@ -88,7 +88,7 @@ export function writeAttendanceToChronus(
     const diffMinute = (diffHour - Math.floor(diffHour)) * 60;
     const costQuantity =
       String(Math.floor(diffHour) - 1).padStart(2, "0") +
-      String(Math.floor(diffMinute)).padStart(2, "0");
+      String(Math.round(diffMinute)).padStart(2, "0");
 
     (doc.getElementsByName("CostQuantity")[0] as HTMLInputElement).value =
       costQuantity;
