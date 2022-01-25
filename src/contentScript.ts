@@ -1,4 +1,4 @@
-import chronusWorkDivisionOptions from "./options/chronusWorkDivisionOptions.json"
+import chronusWorkDivisionOptions from "./options/chronusWorkDivisionOptions.json";
 
 type WorkDivisionOption = {
   label: string;
@@ -40,27 +40,33 @@ export function writeAttendanceToChronus(
     doc.getElementsByName("DateToday")?.[0] as HTMLInputElement
   )?.value;
 
-  if (pageTitle !== "勤休内容登録" || !displayedYmd) return
+  if (pageTitle !== "勤休内容登録" || !displayedYmd) return;
 
   const [_displayedYear, displayedMonth, displayedDate] =
     displayedYmd.split("/");
 
+  // 回数項目を入力
+  (doc.getElementsByName("AllowanceItem")[0] as HTMLInputElement).value =
+    "AllowanceItem_29";
+  (doc.getElementsByName("AllowanceItemValue")[0] as HTMLInputElement).value =
+    "1";
+
   // @ts-expect-error
   chrome.storage.sync.get("data", ({ data }: { data: Data[] }) => {
-    if (!data) return window.alert("データが登録されていません。");
+    if (!data) return;
 
     const targetData = data.find(
       ({ month, date }) => month === displayedMonth && date === displayedDate
     );
 
-    if (!targetData)return console.warn("対象日のデータが登録されていません。");
+    if (!targetData) return;
 
     const workDivisionOption = chronusWorkDivisionOptions.find(
-      ({ start, end }) => start && end && start <= targetData.start && end >= targetData.start
+      ({ start, end }) =>
+        start && end && start <= targetData.start && end >= targetData.start
     );
 
-    if (!workDivisionOption || !workDivisionOption.end)
-      return window.alert("正しいデータが登録されていません。");
+    if (!workDivisionOption || !workDivisionOption.end) return;
 
     // 基本情報を入力する
     const startTimeValue = workDivisionOption.end;
@@ -75,10 +81,6 @@ export function writeAttendanceToChronus(
       endTimeValue;
     (doc.getElementsByName("WorkDivision")[0] as HTMLInputElement).value =
       workDivisionOption.value;
-    (doc.getElementsByName("AllowanceItem")[0] as HTMLInputElement).value =
-      "AllowanceItem_29";
-    (doc.getElementsByName("AllowanceItemValue")[0] as HTMLInputElement).value =
-      "1";
 
     // 工数の計算を行い、最初のPJコードに工数を入力する
     const diff = calcUnixTimeDiff(startTimeValue, endTimeValue);
@@ -112,8 +114,6 @@ export function writeAttendanceToChronus(
           "時差: リモートアクセスのため";
       }
     }
-
-    return window.confirm("OK");
   });
 }
 
