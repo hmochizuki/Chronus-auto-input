@@ -1,8 +1,14 @@
 import { getMessageTimeFromSlack } from "./getMessageTimeFromSlack";
-import { writeAttendanceToChronus } from "./writeAttendanceToChronus";
-import chronusWorkDivisionOptions from "./options/chronusWorkDivisionOptions.json"
 
-const slackButton = document.getElementById("button__slack");
+const slackOpenButton = document.getElementById("button-slack__open");
+
+slackOpenButton?.addEventListener("click", async () => {
+  chrome.tabs.create({
+    url: 'https://app.slack.com/client/T95RQ76BE/search'
+  });
+});
+
+const slackButton = document.getElementById("button-slack__read");
 
 slackButton?.addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -11,18 +17,5 @@ slackButton?.addEventListener("click", async () => {
     target: { tabId: tab.id as number },
     // @ts-expect-error
     function: getMessageTimeFromSlack,
-  });
-});
-
-let chronusButton = document.getElementById("button__chronus");
-
-chronusButton?.addEventListener("click", async () => {
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id as number },
-    // @ts-expect-error
-    function: writeAttendanceToChronus,
-    args: [chronusWorkDivisionOptions],
   });
 });
